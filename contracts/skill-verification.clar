@@ -25,3 +25,15 @@
 
 (define-data-var skill-counter uint u0)
 (define-data-var badge-counter uint u0)
+
+;; Governance parameters
+(define-map governance-parameters
+    { parameter: (string-ascii 50) }
+    { value: uint }
+)
+
+;; Initialize governance parameters
+(begin
+    (map-set governance-parameters { parameter: "min-validators" } { value: u3 })
+    (map-set governance-parameters { parameter: "approval-threshold" } { value: u70 })
+)
