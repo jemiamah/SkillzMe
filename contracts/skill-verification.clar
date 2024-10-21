@@ -113,3 +113,14 @@
         (ok true)
     )
 )
+
+;; Get skill details
+(define-read-only (get-skill (skill-id uint))
+    (map-get? skills { skill-id: skill-id })
+)
+
+;; Get verification status
+(define-read-only (get-verification-status (skill-id uint) (user principal))
+    (map-get? skill-verifications { skill-id: skill-id, user: user })
+)
+
