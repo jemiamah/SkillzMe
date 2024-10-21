@@ -75,3 +75,41 @@
     )
 )
 
+;; Vote on skill verification
+(define-public (vote-on-verification (skill-id uint) (user principal) (approve bool))
+    (let
+        ((verification (unwrap! (map-get? skill-verifications { skill-id: skill-id, user: user }) (err u404)))
+         (skill (unwrap! (map-get? skills { skill-id: skill-id }) (err u404)))
+         (validators (get validators verification)))
+
+        ;; Check if validator has already voted
+        (asserts! (not (is-some (index-of validators tx-sender))) (err u401))
+
+        ;; Update verification
+        (map-set skill-verifications
+            { skill-id: skill-id, user: user }
+            {
+                status: (if (>= (+ (get votes verification) u1) (get required-votes skill))
+                    (if approve "approved" "rejected")
+                    "pending"
+                ),
+                votes: (+ (get votes verification) u1),
+                validators: (append validators tx-sender),
+                badge-id: (if (and approve (>= (+ (get votes verification) u1) (get required-votes skill)))
+                    (some (+ (var-get badge-counter) u1))
+                    (get badge-id verification))
+            }
+        )
+
+        ;; Mint NFT badge if approved
+        (if (and approve (>= (+ (get votes verification) u1) (get required-votes skill)))
+            (begin
+                (nft-mint? skill-badge (+ (var-get badge-counter) u1) user)
+                (var-set badge-counter (+ (var-get badge-counter) u1))
+            )
+            false
+        )
+
+        (ok true)
+    )
+)
